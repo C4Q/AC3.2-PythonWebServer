@@ -101,7 +101,7 @@ $ echo "Hello World" > index.html
 
 ### Test access to flaskapp directory
 
-This url http://ec2-54-236-16-110.compute-1.amazonaws.com/flaskapp/ should display "Hello World". The following 
+At this point the url http://<your server>/flaskapp/ should display "Hello World". The following 
 steps set up the flask framework to handle requests and routes.
 
 ## Configure Apache to see Flask
