@@ -97,12 +97,14 @@ $ sudo chown ec2-user flaskapp/
 
 
 $ echo "Hello World" > index.html
-
-# we can sanity test at this point
-
 ```
-http://ec2-54-236-16-110.compute-1.amazonaws.com/flaskapp/
 
+### Test access to flaskapp directory
+
+This url http://ec2-54-236-16-110.compute-1.amazonaws.com/flaskapp/ should display "Hello World". The following 
+steps set up the flask framework to handle requests and routes.
+
+## Configure Apache to see Flask
 
 Edit /etc/httpd/conf.modules.d/10-wsgi.conf (or /etc/httpd/conf/httpd.conf 
 if the former doesn't exist):
@@ -111,7 +113,7 @@ if the former doesn't exist):
 $ sudo nano /etc/httpd/conf.modules.d/10-wsgi.conf
 ```
 
-Add these lines:
+Adding these lines:
 
 ```
 WSGIDaemonProcess flaskapp threads=5
@@ -125,8 +127,26 @@ WSGIScriptAlias / /var/www/html/flaskapp/flaskapp.wsgi
 </Directory>
 ```
 
+Restart Apache
+
 ```sh
 $ sudo service httpd restart
+```
+
+### Trivial Flask App
+
+```python
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def hello_world():
+  return 'Hello from Flask!'
+  
+if __name__ == '__main__':
+  app.run()
+
 ```
 
 ## Database / Python
@@ -144,15 +164,10 @@ $ sudo yum install MySQL-python27
 
 ```python
 from flask import Flask
-from collections import Counter
 from flask import json
 from flask import jsonify
-import MySQLdb
 
-db = MySQLdb.connect(host="atlas.cf626xxbuyrf.us-east-1.rds.amazonaws.com",    # your host, usually localhost
-                     user="gotuser",         # your username
-                     passwd="winteriscoming",  # your password
-                     db="got")        # name of the database
+import MySQLdb
 
 app = Flask(__name__)
 
@@ -160,16 +175,10 @@ app = Flask(__name__)
 def hello_world():
   return 'Hello from Flask!'
 
-@app.route('/countme/<input_str>')
-def count_me(input_str):
-  input_counter = Counter(input_str)
-  response = []
-  for letter, count in input_counter.most_common():
-      response.append('"{}": {}'.format(letter, count))
-  return '<br>'.join(response)
-
 @app.route('/api/characters')
 def characters():
+  db = dbConnection()
+
   ret = ''
   # you must create a Cursor object. It will let
   #  you execute all the queries you need
@@ -181,21 +190,28 @@ def characters():
   where ch.house_id = h.id
   and ch.character_id = c.id""")
 
-  # print all the first cell of all the rows
+  # gather all the results in this array
   characters = []
   for row in cur.fetchall():
       name = row[0]
       house = row[1]
+
+      # create an ad-hoc object
       characters.append({"name":name, "house":house})
 
   db.close()
 
   return jsonify(characters)
-  # return ret
+
+def dbConnection():
+  conn = MySQLdb.connect(host="atlas.cf626xxbuyrf.us-east-1.rds.amazonaws.com",    # your host, usually localhost
+                     user="gotuser",         # your username
+                     passwd="winteriscoming",  # your password
+                     db="got")        # name of the database
+  return conn
 
 if __name__ == '__main__':
   app.run()
-
 ```
 
 ## Monitoring
@@ -207,6 +223,15 @@ $ sudo tail -f /var/log/httpd/access_log
 # errors
 $ sudo tail -f /var/log/httpd/error_log
 ```
+
+## Troubleshooting
+
+* Check the error log for hints about errors
+* Check the access log if you suspect the request isn't even being processed
+* Be sure you have firewall access (i.e. port 80 is open in Security Groups)
+* If new code seems not to be running or if all else fails try restarting apache
+  ```sudo service httpd restart```
+  
 
 ## Other References
 
