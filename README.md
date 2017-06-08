@@ -95,6 +95,7 @@ $ sudo mkdir flaskapp
 # root can make us the owner again
 $ sudo chown ec2-user flaskapp/
 
+$ cd flaskapp
 
 $ echo "Hello World" > index.html
 ```
