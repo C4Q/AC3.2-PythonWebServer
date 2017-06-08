@@ -136,6 +136,29 @@ $ sudo service httpd restart
 
 ### Trivial Flask App
 
+Save this configuration to a file named flaskapp.wsgi. You can use ```cat``` and redirection ```>``` to do this:
+
+```sh
+cat > flaskapp.wsgi
+```
+
+This will put the cursor on the next line. Paste in the content you want, make sure 
+the cursor is on the beginning of a line and type CTRL-D. You will have a file named 
+flaskapp.wsgi with the contents you typed.
+
+```
+import sys
+sys.path.insert(0, '/var/www/html/flaskapp')
+
+from flaskapp import app as application
+```
+
+Do the same thing for the python/Flask script.
+
+```sh
+cat > flaskapp.py
+```
+
 ```python
 from flask import Flask
 
